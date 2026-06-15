@@ -5,7 +5,7 @@ import sys
 # 1. Instellingen
 pygame.init()
 # Verander deze getallen:
-BREEDTE, HOOGTE = 1000, 700
+BREEDTE, HOOGTE = 800, 600
 scherm = pygame.display.set_mode((BREEDTE, HOOGTE))
 pygame.display.set_caption("Mijn Eerste Game - Hello World")
 
@@ -20,7 +20,7 @@ ROOD = (255,0 ,0)
 # Cirkel eigenschappen
 x, y = 400, 100
 stap_x, stap_y = 4, 4
-straal = 100
+straal = 20
 
 
 # Lettertype voor de tekst
@@ -59,7 +59,7 @@ while True:
    scherm.blit(tekst, (150, 50))
   
    # De stuiterende cirkel
-   pygame.draw.circle(scherm, WIT, (x, y), straal)
+   pygame.draw.circle(scherm, ZWART, (x, y), straal)
 
 
    # Scherm verversen
