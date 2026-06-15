@@ -14,16 +14,17 @@ pygame.display.set_caption("Mijn Eerste Game - Hello World")
 ZWART = (20, 20, 20)
 GROEN = (0, 255, 0)
 WIT = (255, 255, 255)
+ROOD = (255,0 ,0)
 
 
 # Cirkel eigenschappen
-x, y = 300, 200
+x, y = 400, 100
 stap_x, stap_y = 4, 4
-straal = 20
+straal = 100
 
 
 # Lettertype voor de tekst
-font = pygame.font.SysFont("Arial", 32)
+font = pygame.font.SysFont("Helvetica", 100)
 
 
 # 2. Game Loop
@@ -51,18 +52,18 @@ while True:
 
 
    # 4. Tekenen
-   scherm.fill(ZWART)
+   scherm.fill(GROEN)
   
    # Tekst op het scherm
-   tekst = font.render("Hello World! De game draait.", True, WIT)
+   tekst = font.render("Hello World! De game draait.", True, ROOD)
    scherm.blit(tekst, (150, 50))
   
    # De stuiterende cirkel
-   pygame.draw.circle(scherm, GROEN, (x, y), straal)
+   pygame.draw.circle(scherm, WIT, (x, y), straal)
 
 
    # Scherm verversen
    pygame.display.flip()
   
    # Snelheid begrenzen op 60 frames per seconde
-   klok.tick(60)
+   klok.tick(45)
