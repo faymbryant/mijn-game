@@ -6,7 +6,7 @@ import random
 pygame.init()
 BREEDTE, HOOGTE = 800, 600
 scherm = pygame.display.set_mode((BREEDTE, HOOGTE))
-pygame.display.set_caption("Piranha - Nu met 3 Levels!")
+pygame.display.set_caption("Piranha - Unieke Timers per Level")
 
 # Kleuren
 DONKERBLAUW = (10, 30, 60)
@@ -16,7 +16,7 @@ GROEN_KNOP = (34, 177, 76)
 LICHT_GROEN = (50, 220, 100)
 
 # --- AFMETINGEN ---
-speler_grootte = 50           
+speler_grootte = 60           
 kleine_vis_grootte = 35       
 grote_vis_breedte = 100       
 grote_vis_hoogte = 65         
@@ -50,29 +50,27 @@ level = 1
 start_tijd = 0
 straf_tijd = 0
 onkwetsbaar_timer = 0
-eind_tijd = 0
-level_klaar_wacht_op_knop = False  # Status voor de tussenschermen
+level_klaar_wacht_op_knop = False  
 game_compleet = False
+
+# NIEUW: Lijst om de tijden van elk level apart in op te slaan
+level_tijden = {1: 0.0, 2: 0.0, 3: 0.0}
 
 vissen = []
 
 def start_nieuw_level(huidig_level):
     vissen.clear()
     
-    # LEVEL 1
     if huidig_level == 1:
         aantal_klein, aantal_groot = 3, 2
         snelheid_klein, snelheid_groot = 4, 3
-    # LEVEL 2 (Aangepast: nu 3 grote vissen)
     elif huidig_level == 2:
         aantal_klein, aantal_groot = 5, 3
         snelheid_klein, snelheid_groot = 6, 5
-    # LEVEL 3 (Nieuw: 30 kleine vissen, 4 grote vissen)
     elif huidig_level == 3:
         aantal_klein, aantal_groot = 30, 4
-        snelheid_klein, snelheid_groot = 6, 6  # Maximale snelheid!
+        snelheid_klein, snelheid_groot = 6, 6  
 
-    # Spawn kleine vissen
     for i in range(aantal_klein):
         vissen.append({
             "x": random.randint(50, BREEDTE - 50),
@@ -82,7 +80,6 @@ def start_nieuw_level(huidig_level):
             "b": kleine_vis_grootte, "h": kleine_vis_grootte, "type": "klein"
         })
 
-    # Spawn grote vissen
     for i in range(aantal_groot):
         vissen.append({
             "x": random.randint(50, BREEDTE - 100),
@@ -95,9 +92,9 @@ def start_nieuw_level(huidig_level):
 start_nieuw_level(level)
 
 # Knoppen definiëren
-start_knop_rect = pygame.Rect(300, 350, 200, 50)
-next_knop_rect = pygame.Rect(300, 350, 200, 50)   # Hergebruikt voor Level 2 en 3 start
-opnieuw_knop_rect = pygame.Rect(300, 420, 200, 50)
+start_knop_rect = pygame.Rect(300, 440, 200, 50)   
+next_knop_rect = pygame.Rect(300, 380, 200, 50)   
+opnieuw_knop_rect = pygame.Rect(300, 460, 200, 50) # Iets naar beneden geplaatst voor het eindoverzicht
 
 # 2. Game Loop
 klok = pygame.time.Clock()
@@ -112,21 +109,21 @@ while running:
            running = False
            
        if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-           # Startmenu klik
            if not game_gestart:
                if start_knop_rect.collidepoint(muis_pos):
                    game_gestart = True
                    start_tijd = pygame.time.get_ticks() 
+                   straf_tijd = 0 # Reset straftijd bij de start
            
-           # Tussenscherm klik (Volgende level starten)
            elif level_klaar_wacht_op_knop:
                if next_knop_rect.collidepoint(muis_pos):
                    level += 1
                    level_klaar_wacht_op_knop = False
                    speler_x, speler_y = 400, 300
                    start_nieuw_level(level)
+                   start_tijd = pygame.time.get_ticks() # NIEUW: Reset de timer voor het volgende level!
+                   straf_tijd = 0                       # NIEUW: Reset de straftijd voor het volgende level!
            
-           # Eindscherm klik (Helemaal opnieuw beginnen)
            elif game_compleet:
                if opnieuw_knop_rect.collidepoint(muis_pos):
                    level = 1
@@ -134,6 +131,7 @@ while running:
                    onkwetsbaar_timer = 0
                    game_compleet = False
                    level_klaar_wacht_op_knop = False
+                   level_tijden = {1: 0.0, 2: 0.0, 3: 0.0} # Reset de opgeslagen tijden
                    speler_x, speler_y = 400, 300
                    start_nieuw_level(level)
                    start_tijd = pygame.time.get_ticks()
@@ -179,11 +177,12 @@ while running:
        # LEVEL & WINST CHECK
        aantal_kleine_vissen = len([v for v in vissen if v["type"] == "klein"])
        if aantal_kleine_vissen == 0:
+           level_tijden[level] = huidige_tijd # Sla de tijd van dit specifieke level op!
+           
            if level < 3:
-               level_klaar_wacht_op_knop = True # Toon tussenscherm voor volgende level
+               level_klaar_wacht_op_knop = True 
            else:
                game_compleet = True
-               eind_tijd = huidige_tijd
 
    # 4. TEKENEN
    scherm.fill(DONKERBLAUW)
@@ -191,28 +190,43 @@ while running:
    # MENU SCHERM
    if not game_gestart:
        tekst_titel = font_titel.render("PIRANHA", True, GEEL)
-       tekst_uitleg = font_ui.render("Eet de groene vissen. Ontwijk de brede rode!", True, WIT)
-       scherm.blit(tekst_titel, (260, 160))
-       scherm.blit(tekst_uitleg, (200, 260))
+       scherm.blit(tekst_titel, (260, 80))
+       
+       uitleg_1 = font_ui.render("Hoe speel je het spel:", True, GEEL)
+       uitleg_2 = font_ui.render("- Bestuur de piranha met de pijltjestoetsen.", True, WIT)
+       uitleg_3 = font_ui.render("- Eet alle kleine vissen op om het level te halen.", True, WIT)
+       uitleg_4 = font_ui.render("- Ontwijk de grote vissen.", True, WIT)
+       uitleg_5 = font_ui.render("- Raak je een grote vis? Dan krijg je +2 seconden straftijd!", True, WIT)
+       uitleg_6 = font_ui.render("Probeer de 3 levels zo snel mogelijk uit te spelen!", True, GEEL)
+       
+       scherm.blit(uitleg_1, (80, 180))
+       scherm.blit(uitleg_2, (80, 220))
+       scherm.blit(uitleg_3, (80, 250))
+       scherm.blit(uitleg_4, (80, 280))
+       scherm.blit(uitleg_5, (80, 310))
+       scherm.blit(uitleg_6, (80, 360))
        
        kleur_knop = LICHT_GROEN if start_knop_rect.collidepoint(muis_pos) else GROEN_KNOP
        pygame.draw.rect(scherm, kleur_knop, start_knop_rect, border_radius=10)
        tekst_knop = font_ui.render("START GAME", True, WIT)
-       scherm.blit(tekst_knop, (335, 362))
+       scherm.blit(tekst_knop, (335, 452))
 
-   # TUSSENSCHERM (Level gehaald, wacht op start volgende level)
+   # TUSSENSCHERM (Laat de tijd van het zojuist gespeelde level zien)
    elif level_klaar_wacht_op_knop:
        tekst_lvl = font_winst.render(f"Level {level} Gewonnen!", True, GEEL)
-       tekst_sub = font_ui.render(f"Maak je borst maar nat voor Level {level + 1}...", True, WIT)
-       scherm.blit(tekst_lvl, (160, 180))
-       scherm.blit(tekst_sub, (210, 270))
+       tekst_tijd_status = font_ui.render(f"Tijd voor dit level: {level_tijden[level]:.1f} seconden", True, WIT)
+       tekst_sub = font_ui.render("Klaar voor het volgende level?", True, GEEL) 
+       
+       scherm.blit(tekst_lvl, (160, 150))
+       scherm.blit(tekst_tijd_status, (250, 240))
+       scherm.blit(tekst_sub, (245, 290))
        
        kleur_next = LICHT_GROEN if next_knop_rect.collidepoint(muis_pos) else GROEN_KNOP
        pygame.draw.rect(scherm, kleur_next, next_knop_rect, border_radius=10)
        
        tekst_knop_next = f"START LEVEL {level + 1}"
        tekst_next = font_ui.render(tekst_knop_next, True, WIT)
-       scherm.blit(tekst_next, (315, 362))
+       scherm.blit(tekst_next, (315, 392))
 
    # GAMEPLAY & EINDSCHERM
    else:
@@ -232,24 +246,35 @@ while running:
                kleur_speler = (255, 50, 50) if onkwetsbaar_timer > 50 else (0, 100, 255)
                pygame.draw.rect(scherm, kleur_speler, (speler_x, speler_y, speler_grootte, speler_grootte))
 
-       # Lopende UI
+       # Lopende UI (Timer voor het HUIDIGE level)
        if not game_compleet:
-           tekst_timer = font_ui.render(f"Tijd: {huidige_tijd:.1f} sec", True, WIT)
+           tekst_timer = font_ui.render(f"Tijd Level {level}: {huidige_tijd:.1f} sec", True, WIT)
            tekst_level = font_ui.render(f"Level: {level}", True, GEEL)
            scherm.blit(tekst_timer, (20, 20))
            scherm.blit(tekst_level, (BREEDTE - 100, 20))
        
-       # Eindscherm
+       # Eindscherm (Nu met een compleet overzicht van alle levels!)
        if game_compleet:
            tekst_winst = font_winst.render("Spel Uitgespeeld!", True, GEEL)
-           tekst_score = font_ui.render(f"Je totale eindtijd score: {eind_tijd:.1f} seconden", True, WIT)
-           scherm.blit(tekst_winst, (170, 160))
-           scherm.blit(tekst_score, (240, 260))
+           scherm.blit(tekst_winst, (170, 100))
+           
+           # Scores per level renderen
+           score_l1 = font_ui.render(f"Tijd Level 1: {level_tijden[1]:.1f} sec", True, WIT)
+           score_l2 = font_ui.render(f"Tijd Level 2: {level_tijden[2]:.1f} sec", True, WIT)
+           score_l3 = font_ui.render(f"Tijd Level 3: {level_tijden[3]:.1f} sec", True, WIT)
+           
+           totale_tijd = level_tijden[1] + level_tijden[2] + level_tijden[3]
+           score_totaal = font_ui.render(f"Totale Eindscore: {totale_tijd:.1f} seconden", True, GEEL)
+           
+           scherm.blit(score_l1, (280, 220))
+           scherm.blit(score_l2, (280, 260))
+           scherm.blit(score_l3, (280, 300))
+           scherm.blit(score_totaal, (240, 370))
            
            kleur_opnieuw = LICHT_GROEN if opnieuw_knop_rect.collidepoint(muis_pos) else GROEN_KNOP
            pygame.draw.rect(scherm, kleur_opnieuw, opnieuw_knop_rect, border_radius=10)
            tekst_opnieuw = font_ui.render("AGAIN?", True, WIT)
-           scherm.blit(tekst_opnieuw, (360, 432))
+           scherm.blit(tekst_opnieuw, (360, 472))
 
    pygame.display.flip()
    klok.tick(60)
