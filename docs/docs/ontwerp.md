@@ -1,0 +1,17 @@
+Game Design Document: Piranha1. Omschrijving & ConceptPiranha is een snelle, arcade-achtige singleplayer game voor de computer waarin de speler de controle neemt over een hongerige piranha. Het spel draait om behendigheid, focus en presteren onder tijdsdruk.Kernmechanics:Besturing: De speler bestuurt de piranha heel intuïtief via de pijltjestoetsen op het toetsenbord (omhoog, omlaag, links, rechts).Doel: Zo snel mogelijk alle kleinere vissen in het level opeten.Interactie (Collision): * Aanraking met een kleinere vis: De piranha eet de vis op. De vis verdwijnt direct en er klinkt een geluidseffect.Aanraking met een grotere vis: De piranha wordt aangevallen/opgegeten. De speler behoudt zijn constante formaat, maar incasseert een tijdstraf van $+2$ seconden op de eindtijd.2. Score & ProgressieDe Score: De score is de totale tijd die de speler nodig heeft om het level te voltooien. Hoe sneller, hoe beter de score.Winstvoorwaarde: Zodra de allerlaatste kleine vis is opgegeten, is het level gewonnen.Levels & Moeilijkheidsgraad: Het spel bestaat uit verschillende levels. De omstandigheden worden per level uitdagender door:Een hoger aantal grote (gevaarlijke) vissen op het scherm.Een hogere zwemsnelheid van zowel de kleine als de grote vissen.3. Visuele Stijl & Audio (Usability)Beeld: Alle personages en achtergronden zijn vormgegeven als duidelijke, sprekende tekeningen.Audio: Er zijn geluidseffecten aanwezig bij interacties (zoals een 'hap'-geluidje als er een vis verdwijnt) om de speler directe feedback te geven.UI (User Interface): Na het voltooien van een level verschijnt er direct een tekstscherm dat de speler feliciteert, de uiteindelijke finishtijd toont, en een knop/optie biedt om door te gaan naar het volgende level.4. Algoritme & Gedrag (Aanpak)Het spel is technisch opgebouwd uit objecten die bewegen binnen het scherm en reageren op elkaar.Autonome Beweging (NPC's): Zowel de grote als de kleine vissen bewegen volgens het stuiterbal-principe. Ze zwemmen in een rechte, diagonale lijn en bouncen automatisch omgedraaid terug zodra ze de randen van het scherm raken.Speler-besturing: De piranha reageert direct op de input van de pijltjestoetsen om vrij door het scherm te navigeren.Fasering in de Ontwikkeling:Stap 1: Het programmeren van de willekeurig bewegende AI-vissen (klein en groot) met de stuiter-logica.Stap 2: Het toevoegen van de bestuurbare piranha.Stap 3: Het implementeren van de botsingsdetectie (eten = vis weg, geraakt worden = $+2$ seconden op de timer).Stap 4: De grafische afwerking (tekeningen inladen), geluiden toevoegen en het levelsysteem bouwen.5. Storyboard (Game Flow)[ Startscherm / Level 1 start ]
+             │
+             ▼
+[ Gameplay Loop ] ────────────────────────┐
+│ - Piranha zwemt rond via pijltjes       │
+│ - Grote & kleine vissen bouncen rond    │
+│                                         │
+├─► Raakt kleine vis? ──► Vis weg + Geluid│
+└─► Raakt grote vis?  ──► Timer + 2 sec.  │
+             ▲                            │
+             └────────────────────────────┘
+             │ (Alle kleine vissen op?)
+             ▼
+[ Level Voltooid Scherm ]
+- Toont felicitatie
+- Toont de behaalde Eindtijd
+- Knop: "Naar volgend level"
