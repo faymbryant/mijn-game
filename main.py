@@ -6,7 +6,7 @@ import random
 pygame.init()
 BREEDTE, HOOGTE = 800, 600
 scherm = pygame.display.set_mode((BREEDTE, HOOGTE))
-pygame.display.set_caption("Piranha - Volledige Game met Startmenu")
+pygame.display.set_caption("Piranha - Volledige Game")
 
 # Kleuren
 DONKERBLAUW = (10, 30, 60)
@@ -80,8 +80,9 @@ def start_nieuw_level(huidig_level):
 # Start direct de setup voor Level 1
 start_nieuw_level(level)
 
-# Definieer de startknop (x, y, breedte, hoogte)
+# Knoppen definiëren (x, y, breedte, hoogte)
 start_knop_rect = pygame.Rect(300, 350, 200, 60)
+opnieuw_knop_rect = pygame.Rect(300, 420, 200, 60) # NIEUW: De knop voor het eindscherm
 
 # 2. Game Loop
 klok = pygame.time.Clock()
@@ -90,19 +91,31 @@ running = True
 while running:
    pygame.event.pump()
    
-   # Muispositie ophalen voor het hover-effect
+   # Muispositie ophalen voor de knoppen
    muis_pos = pygame.mouse.get_pos()
    
    for event in pygame.event.get():
        if event.type == pygame.QUIT:
            running = False
            
-       # Veilig checken of de startknop wordt losgelaten (voorkomt vastlopen)
+       # Klikken registreren via MOUSEBUTTONUP
        if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+           # Actie op het startmenu
            if not game_gestart:
                if start_knop_rect.collidepoint(muis_pos):
                    game_gestart = True
                    start_tijd = pygame.time.get_ticks() 
+           
+           # NIEUW: Actie op het eindscherm (Reset de game)
+           elif game_compleet:
+               if opnieuw_knop_rect.collidepoint(muis_pos):
+                   level = 1
+                   straf_tijd = 0
+                   onkwetsbaar_timer = 0
+                   game_compleet = False
+                   speler_x, speler_y = 400, 300
+                   start_nieuw_level(level)
+                   start_tijd = pygame.time.get_ticks() # Reset de klok naar nu
 
    # --- LOGICA VOOR DE GAMEPLAY ---
    if game_gestart and not game_compleet:
@@ -163,7 +176,7 @@ while running:
        scherm.blit(tekst_titel, (230, 150))
        scherm.blit(tekst_uitleg, (190, 250))
        
-       # Hover effect knop
+       # Hover effect startknop
        kleur_knop = LICHT_GROEN if start_knop_rect.collidepoint(muis_pos) else GROEN_KNOP
        pygame.draw.rect(scherm, kleur_knop, start_knop_rect, border_radius=10)
        
@@ -197,11 +210,19 @@ while running:
            scherm.blit(tekst_timer, (20, 20))
            scherm.blit(tekst_level, (BREEDTE - 120, 20))
        
+       # Het Eindscherm
        if game_compleet:
            tekst_winst = font_winst.render("Spel Uitgespeeld!", True, GEEL)
            tekst_score = font_ui.render(f"Je totale eindtijd score: {eind_tijd:.1f} seconden", True, WIT)
-           scherm.blit(tekst_winst, (130, 200))
-           scherm.blit(tekst_score, (220, 320))
+           scherm.blit(tekst_winst, (130, 150))
+           scherm.blit(tekst_score, (220, 270))
+           
+           # NIEUW: Teken de "Opnieuw" knop op het eindscherm met hover-effect
+           kleur_opnieuw = LICHT_GROEN if opnieuw_knop_rect.collidepoint(muis_pos) else GROEN_KNOP
+           pygame.draw.rect(scherm, kleur_opnieuw, opnieuw_knop_rect, border_radius=10)
+           
+           tekst_opnieuw = font_ui.render("AGAIN?", True, WIT)
+           scherm.blit(tekst_opnieuw, (355, 435))
 
    pygame.display.flip()
    klok.tick(60)
