@@ -1,69 +1,62 @@
 import pygame
 import sys
 
-
 # 1. Instellingen
 pygame.init()
-# Verander deze getallen:
 BREEDTE, HOOGTE = 800, 600
 scherm = pygame.display.set_mode((BREEDTE, HOOGTE))
-pygame.display.set_caption("Mijn Eerste Game - Hello World")
-
+pygame.display.set_caption("Piranha - Prototype 1")
 
 # Kleuren
-ZWART = (20, 20, 20)
-GROEN = (0, 255, 0)
-WIT = (255, 255, 255)
-ROOD = (255,0 ,0)
+BLAUW = (0, 100, 255)      # Kleur voor de Piranha speler
+DONKERBLAUW = (10, 30, 60) # Een mooie 'water' achtergrondkleur
 
-
-# Cirkel eigenschappen
-x, y = 400, 100
-stap_x, stap_y = 4, 4
-straal = 20
-
-
-# Lettertype voor de tekst
-font = pygame.font.SysFont("Helvetica", 100)
-
+# Piranha (Speler) eigenschappen
+speler_x = 400
+speler_y = 300
+speler_grootte = 40
+speler_snelheid = 6
 
 # 2. Game Loop
 klok = pygame.time.Clock()
 
-
 while True:
-   # Events checken (zoals het kruisje klikken)
+   # Events checken
    for event in pygame.event.get():
        if event.type == pygame.QUIT:
            pygame.quit()
            sys.exit()
 
+   # Knoppen uitlezen voor de besturing
+   toetsen = pygame.key.get_pressed()
+   
+   if toetsen[pygame.K_LEFT]:
+       speler_x -= speler_snelheid
+   if toetsen[pygame.K_RIGHT]:
+       speler_x += speler_snelheid
+   if toetsen[pygame.K_UP]:
+       speler_y -= speler_snelheid
+   if toetsen[pygame.K_DOWN]:
+       speler_y += speler_snelheid
 
-   # 3. Logica (berekeningen)
-   x += stap_x
-   y += stap_y
-
-
-   # Botsing met de randen
-   if x + straal > BREEDTE or x - straal < 0:
-       stap_x *= -1
-   if y + straal > HOOGTE or y - straal < 0:
-       stap_y *= -1
-
+   # Zorgen dat de Piranha niet buiten het scherm zwemt
+   if speler_x < 0:
+       speler_x = 0
+   if speler_x > BREEDTE - speler_grootte:
+       speler_x = BREEDTE - speler_grootte
+   if speler_y < 0:
+       speler_y = 0
+   if speler_y > HOOGTE - speler_grootte:
+       speler_y = HOOGTE - speler_grootte
 
    # 4. Tekenen
-   scherm.fill(GROEN)
+   scherm.fill(DONKERBLAUW) # Achtergrond vullen met waterkleur
   
-   # Tekst op het scherm
-   tekst = font.render("Hello World! De game draait.", True, ROOD)
-   scherm.blit(tekst, (150, 50))
-  
-   # De stuiterende cirkel
-   pygame.draw.circle(scherm, ZWART, (x, y), straal)
-
+   # De Piranha tekenen (voor nu een blauw vierkant)
+   pygame.draw.rect(scherm, BLAUW, (speler_x, speler_y, speler_grootte, speler_grootte))
 
    # Scherm verversen
    pygame.display.flip()
   
-   # Snelheid begrenzen op 60 frames per seconde
-   klok.tick(45)
+   # Snelheid begrenzen op 60 frames per seconde voor soepele besturing
+   klok.tick(60)
