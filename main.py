@@ -6,15 +6,37 @@ import random
 pygame.init()
 BREEDTE, HOOGTE = 800, 600
 scherm = pygame.display.set_mode((BREEDTE, HOOGTE))
-pygame.display.set_caption("Piranha - Prototype 2: Timer & Straf")
+pygame.display.set_caption("Piranha - Prototype 2")
 
-# Kleuren
-BLAUW = (0, 100, 255)       # Piranha
+# Kleuren (voor tekst en achtergrond)
 DONKERBLAUW = (10, 30, 60)  # Water
-GROEN = (0, 255, 100)       # Kleine vissen
-ROOD = (255, 50, 50)        # Grote vissen
 WIT = (255, 255, 255)       # Tekstkleur
 GEEL = (255, 220, 0)        # Winsttekst
+
+# --- GRAPHICS INLADEN MET VEILIGHEIDSCHECK ---
+images_geladen = False
+
+try:
+    speler_img = pygame.image.load("piranha.png")
+    kleine_vis_img = pygame.image.load("kleine_vis.png")
+    grote_vis_img = pygame.image.load("grote_vis.png")
+    
+    # Pas de afbeeldingen direct aan naar de juiste groottes
+    speler_img = pygame.transform.scale(speler_img, (40, 40))
+    kleine_vis_img = pygame.transform.scale(kleine_vis_img, (20, 20))
+    grote_vis_img = pygame.transform.scale(grote_vis_img, (60, 60))
+    
+    images_geladen = True
+    print("Succes: Alle afbeeldingen zijn correct geladen!")
+except Exception as e:
+    print("Opmerking: Afbeeldingen niet gevonden. We spelen met gekleurde blokjes!")
+    images_geladen = False
+
+# Piranha (Speler) eigenschappen
+speler_x = 400
+speler_y = 300
+speler_grootte = 40
+speler_snelheid = 6
 
 # Piranha (Speler) eigenschappen
 speler_x = 400
@@ -27,10 +49,10 @@ font_ui = pygame.font.SysFont("Helvetica", 30)
 font_winst = pygame.font.SysFont("Helvetica", 80)
 
 # Timers en Status
-start_tijd = pygame.time.get_ticks() # Onthoud wanneer het spel begon
-straf_tijd = 0                       # Extra seconden opgelopen door straf
-onkwetsbaar_timer = 0                # Timer voor de "AU!"-status en onkwetsbaarheid
-eind_tijd = 0                        # Slaat de eindscore op bij winst
+start_tijd = pygame.time.get_ticks()
+straf_tijd = 0
+onkwetsbaar_timer = 0
+eind_tijd = 0
 game_gewonnen = False
 
 # AI Vissen aanmaken
@@ -44,7 +66,6 @@ for i in range(3):
         "stap_x": random.choice([-4, 4]),
         "stap_y": random.choice([-4, 4]),
         "grootte": 20,
-        "kleur": GROEN,
         "type": "klein"
     })
 
@@ -56,7 +77,6 @@ for i in range(2):
         "stap_x": random.choice([-3, 3]),
         "stap_y": random.choice([-3, 3]),
         "grootte": 60,
-        "kleur": ROOD,
         "type": "groot"
     })
 
@@ -72,7 +92,6 @@ while running:
            running = False
 
    if not game_gewonnen:
-       # Bereken de huidige tijd (in seconden) + de opgelopen straftijd
        huidige_tijd = (pygame.time.get_ticks() - start_tijd) / 1000 + straf_tijd
 
        # Knoppen uitlezen voor de besturing
@@ -104,12 +123,11 @@ while running:
 
            if speler_rect.colliderect(vis_rect):
                if vis["type"] == "klein":
-                   vissen.remove(vis)
+                   vissen.remove(vis) # Vis verdwijnt in stilte
                elif vis["type"] == "groot" and onkwetsbaar_timer == 0:
-                   straf_tijd += 2          # Direct 2 seconden straf erbij!
-                   onkwetsbaar_timer = 60   # 1 seconde (60 frames) onkwetsbaar en rood flitsen
+                   straf_tijd += 2
+                   onkwetsbaar_timer = 60
 
-       # Verminder de onkwetsbaarheidstimer als deze actief is
        if onkwetsbaar_timer > 0:
            onkwetsbaar_timer -= 1
 
@@ -117,34 +135,38 @@ while running:
        aantal_kleine_vissen = len([v for v in vissen if v["type"] == "klein"])
        if aantal_kleine_vissen == 0:
            game_gewonnen = True
-           eind_tijd = huidige_tijd # Sla de definitieve eindtijd op
+           eind_tijd = huidige_tijd
 
    # 4. Tekenen
    scherm.fill(DONKERBLAUW)
   
    # Teken de AI-vissen
    for vis in vissen:
-       pygame.draw.rect(scherm, vis["kleur"], (vis["x"], vis["y"], vis["grootte"], vis["grootte"]))
+       if images_geladen:
+           afbeelding = kleine_vis_img if vis["type"] == "klein" else grote_vis_img
+           scherm.blit(afbeelding, (vis["x"], vis["y"]))
+       else:
+           kleur = (0, 255, 100) if vis["type"] == "klein" else (255, 50, 50)
+           pygame.draw.rect(scherm, kleur, (vis["x"], vis["y"], vis["grootte"], vis["grootte"]))
 
-   # De Piranha tekenen (Flitst rood als je geraakt bent)
+   # De Piranha tekenen
    if onkwetsbaar_timer > 0 and onkwetsbaar_timer % 10 < 5:
-       # Sla het tekenen van de speler soms een frame over voor een knipper-effect
        pass
    else:
-       # Als je net geraakt bent, kleur je even ROOD, anders BLAUW
-       kleur_speler = ROOD if onkwetsbaar_timer > 50 else BLAUW
-       pygame.draw.rect(scherm, kleur_speler, (speler_x, speler_y, speler_grootte, speler_grootte))
+       if images_geladen:
+           scherm.blit(speler_img, (speler_x, speler_y))
+       else:
+           kleur_speler = (255, 50, 50) if onkwetsbaar_timer > 50 else (0, 100, 255)
+           pygame.draw.rect(scherm, kleur_speler, (speler_x, speler_y, speler_grootte, speler_grootte))
 
    # UI BOVENIN HET SCHERM TEKENEN
    if not game_gewonnen:
        tekst_timer = font_ui.render(f"Tijd: {huidige_tijd:.1f} sec", True, WIT)
        scherm.blit(tekst_timer, (20, 20))
    
-   # Als er gewonnen is, toon het eindscherm met de score
    if game_gewonnen:
        tekst_winst = font_winst.render("Level Voltooid!", True, GEEL)
        tekst_score = font_ui.render(f"Je score (totale tijd): {eind_tijd:.1f} seconden", True, WIT)
-       
        scherm.blit(tekst_winst, (160, 200))
        scherm.blit(tekst_score, (200, 320))
 
